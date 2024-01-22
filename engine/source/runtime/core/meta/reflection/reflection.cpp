@@ -36,7 +36,7 @@ namespace Piccolo
 
         void TypeMetaRegisterinterface::registerToClassMap(const char* name, ClassFunctionTuple* value)
         {
-            // 反射时基类名字多了命名空间
+            // Unnecessary namespace add before base class name in reflection
             if (m_class_map.find(name) == m_class_map.end())
             {
                 m_class_map.insert(std::make_pair(name, value));
