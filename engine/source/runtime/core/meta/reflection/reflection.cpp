@@ -36,6 +36,7 @@ namespace Piccolo
 
         void TypeMetaRegisterinterface::registerToClassMap(const char* name, ClassFunctionTuple* value)
         {
+            // 反射时基类名字多了命名空间
             if (m_class_map.find(name) == m_class_map.end())
             {
                 m_class_map.insert(std::make_pair(name, value));
@@ -53,6 +54,11 @@ namespace Piccolo
                 delete itr.second;
             }
             m_field_map.clear();
+            for (const auto& itr : m_method_map)
+            {
+                delete itr.second;
+            }
+            m_method_map.clear();
             for (const auto& itr : m_class_map)
             {
                 delete itr.second;

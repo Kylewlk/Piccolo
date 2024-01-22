@@ -99,16 +99,19 @@ namespace Piccolo
         if (target_name.find_first_of('.') == target_name.npos)
         {
             // target is a component
-            auto components = game_object.lock()->getComponents();
+//            auto components = game_object.lock()->getComponents();
+//
+//            auto component_iter = std::find_if(
+//                components.begin(), components.end(), [target_name](auto c) { return c.getTypeName() == target_name; });
+//            if (component_iter != components.end())
+//            {
+//                meta            = Reflection::TypeMeta::newMetaFromName(target_name);
+//                target_instance = component_iter->getPtr();
+//            }
 
-            auto component_iter = std::find_if(
-                components.begin(), components.end(), [target_name](auto c) { return c.getTypeName() == target_name; });
-            if (component_iter != components.end())
-            {
-                meta            = Reflection::TypeMeta::newMetaFromName(target_name);
-                target_instance = component_iter->getPtr();
-            }
-            else
+            meta            = Reflection::TypeMeta::newMetaFromName(target_name);
+            target_instance = game_object.lock()->tryGetComponent<Component>(target_name);
+            if (target_instance == nullptr)
             {
                 LOG_ERROR("Cand find component");
                 return;

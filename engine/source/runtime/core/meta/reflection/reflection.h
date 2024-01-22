@@ -85,15 +85,14 @@ namespace Piccolo
     typedef std::function<bool()>                  GetBoolFunc;
     typedef std::function<void(void*)>             InvokeFunction;
 
-    typedef std::function<void*(const Json&)>                           ConstructorWithJson;
-    typedef std::function<Json(void*)>                                  WriteJsonByName;
-    typedef std::function<int(Reflection::ReflectionInstance*&, void*)> GetBaseClassReflectionInstanceListFunc;
+    using ConstructorWithJson = std::function<void *(const Json &)>;
+    using WriteJsonByName = std::function<Json (void *)>;
+    using GetBaseClassReflectionInstanceListFunc = std::function<int (Reflection::ReflectionInstance *&, void *)>;
 
-    typedef std::tuple<SetFuncion, GetFuncion, GetNameFuncion, GetNameFuncion, GetNameFuncion, GetBoolFunc>
-                                                       FieldFunctionTuple;
-    typedef std::tuple<GetNameFuncion, InvokeFunction> MethodFunctionTuple;
-    typedef std::tuple<GetBaseClassReflectionInstanceListFunc, ConstructorWithJson, WriteJsonByName> ClassFunctionTuple;
-    typedef std::tuple<SetArrayFunc, GetArrayFunc, GetSizeFunc, GetNameFuncion, GetNameFuncion>      ArrayFunctionTuple;
+    using FieldFunctionTuple = std::tuple<SetFuncion, GetFuncion, GetNameFuncion, GetNameFuncion, GetNameFuncion, GetBoolFunc>;
+    using MethodFunctionTuple = std::tuple<GetNameFuncion, InvokeFunction>;
+    using ClassFunctionTuple = std::tuple<GetBaseClassReflectionInstanceListFunc, ConstructorWithJson, WriteJsonByName>;
+    using ArrayFunctionTuple = std::tuple<SetArrayFunc, GetArrayFunc, GetSizeFunc, GetNameFuncion, GetNameFuncion>;
 
     namespace Reflection
     {
