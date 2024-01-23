@@ -12,7 +12,7 @@
 
 namespace Piccolo
 {
-    void DirectionalLightShadowPass::initialize(const RenderPassInitInfo* init_info)
+    void DirectionalLightShadowPass::initialize(const RenderPassInitInfo*  /*init_info*/)
     {
         RenderPass::initialize(nullptr);
 
@@ -38,16 +38,14 @@ namespace Piccolo
     void DirectionalLightShadowPass::draw() { drawModel(); }
     void DirectionalLightShadowPass::setupAttachments()
     {
-        // color and depth
-        m_framebuffer.attachments.resize(2);
-
-        // color
-        m_framebuffer.attachments[0].format = RHI_FORMAT_R32_SFLOAT;
+        // depth
+        m_framebuffer.attachments.resize(1);
+        m_framebuffer.attachments[0].format = RHI_FORMAT_D32_SFLOAT;
         m_rhi->createImage(s_directional_light_shadow_map_dimension,
                            s_directional_light_shadow_map_dimension,
                            m_framebuffer.attachments[0].format,
                            RHI_IMAGE_TILING_OPTIMAL,
-                           RHI_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT,
+                           RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT,
                            RHI_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                            m_framebuffer.attachments[0].image,
                            m_framebuffer.attachments[0].mem,
@@ -56,74 +54,34 @@ namespace Piccolo
                            1);
         m_rhi->createImageView(m_framebuffer.attachments[0].image,
                                m_framebuffer.attachments[0].format,
-                               RHI_IMAGE_ASPECT_COLOR_BIT,
+                               RHI_IMAGE_ASPECT_DEPTH_BIT,
                                RHI_IMAGE_VIEW_TYPE_2D,
                                1,
                                1,
                                m_framebuffer.attachments[0].view);
-
-        // depth
-        m_framebuffer.attachments[1].format = m_rhi->getDepthImageInfo().depth_image_format;
-        m_rhi->createImage(s_directional_light_shadow_map_dimension,
-                           s_directional_light_shadow_map_dimension,
-                           m_framebuffer.attachments[1].format,
-                           RHI_IMAGE_TILING_OPTIMAL,
-                           RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-                           RHI_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                           m_framebuffer.attachments[1].image,
-                           m_framebuffer.attachments[1].mem,
-                           0,
-                           1,
-                           1);
-         m_rhi->createImageView(m_framebuffer.attachments[1].image,
-                                m_framebuffer.attachments[1].format,
-                                RHI_IMAGE_ASPECT_DEPTH_BIT,
-                                RHI_IMAGE_VIEW_TYPE_2D,
-                                1,
-                                1,
-                                m_framebuffer.attachments[1].view);
     }
     void DirectionalLightShadowPass::setupRenderPass()
     {
-        RHIAttachmentDescription attachments[2] = {};
-
-        RHIAttachmentDescription& directional_light_shadow_color_attachment_description = attachments[0];
-        directional_light_shadow_color_attachment_description.format         = m_framebuffer.attachments[0].format;
-        directional_light_shadow_color_attachment_description.samples        = RHI_SAMPLE_COUNT_1_BIT;
-        directional_light_shadow_color_attachment_description.loadOp         = RHI_ATTACHMENT_LOAD_OP_CLEAR;
-        directional_light_shadow_color_attachment_description.storeOp        = RHI_ATTACHMENT_STORE_OP_STORE;
-        directional_light_shadow_color_attachment_description.stencilLoadOp  = RHI_ATTACHMENT_LOAD_OP_DONT_CARE;
-        directional_light_shadow_color_attachment_description.stencilStoreOp = RHI_ATTACHMENT_STORE_OP_DONT_CARE;
-        directional_light_shadow_color_attachment_description.initialLayout  = RHI_IMAGE_LAYOUT_UNDEFINED;
-        directional_light_shadow_color_attachment_description.finalLayout    = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        RHIAttachmentDescription& directional_light_shadow_depth_attachment_description = attachments[1];
-        directional_light_shadow_depth_attachment_description.format         = m_framebuffer.attachments[1].format;
+        RHIAttachmentDescription directional_light_shadow_depth_attachment_description{};
+        directional_light_shadow_depth_attachment_description.format         = m_framebuffer.attachments[0].format;
         directional_light_shadow_depth_attachment_description.samples        = RHI_SAMPLE_COUNT_1_BIT;
         directional_light_shadow_depth_attachment_description.loadOp         = RHI_ATTACHMENT_LOAD_OP_CLEAR;
         directional_light_shadow_depth_attachment_description.storeOp        = RHI_ATTACHMENT_STORE_OP_DONT_CARE;
         directional_light_shadow_depth_attachment_description.stencilLoadOp  = RHI_ATTACHMENT_LOAD_OP_DONT_CARE;
         directional_light_shadow_depth_attachment_description.stencilStoreOp = RHI_ATTACHMENT_STORE_OP_DONT_CARE;
         directional_light_shadow_depth_attachment_description.initialLayout  = RHI_IMAGE_LAYOUT_UNDEFINED;
-        directional_light_shadow_depth_attachment_description.finalLayout =
-            RHI_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        directional_light_shadow_depth_attachment_description.finalLayout = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         RHISubpassDescription subpasses[1] = {};
 
-        RHIAttachmentReference shadow_pass_color_attachment_reference {};
-        shadow_pass_color_attachment_reference.attachment =
-            &directional_light_shadow_color_attachment_description - attachments;
-        shadow_pass_color_attachment_reference.layout = RHI_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
         RHIAttachmentReference shadow_pass_depth_attachment_reference {};
-        shadow_pass_depth_attachment_reference.attachment =
-            &directional_light_shadow_depth_attachment_description - attachments;
+        shadow_pass_depth_attachment_reference.attachment = 0;
         shadow_pass_depth_attachment_reference.layout = RHI_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         RHISubpassDescription& shadow_pass   = subpasses[0];
         shadow_pass.pipelineBindPoint       = RHI_PIPELINE_BIND_POINT_GRAPHICS;
-        shadow_pass.colorAttachmentCount    = 1;
-        shadow_pass.pColorAttachments       = &shadow_pass_color_attachment_reference;
+        shadow_pass.colorAttachmentCount    = 0;
+        shadow_pass.pColorAttachments       = nullptr;
         shadow_pass.pDepthStencilAttachment = &shadow_pass_depth_attachment_reference;
 
         RHISubpassDependency dependencies[1] = {};
@@ -131,16 +89,16 @@ namespace Piccolo
         RHISubpassDependency& lighting_pass_dependency = dependencies[0];
         lighting_pass_dependency.srcSubpass           = 0;
         lighting_pass_dependency.dstSubpass           = RHI_SUBPASS_EXTERNAL;
-        lighting_pass_dependency.srcStageMask         = RHI_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        lighting_pass_dependency.dstStageMask         = RHI_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        lighting_pass_dependency.srcAccessMask        = RHI_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // STORE_OP_STORE
-        lighting_pass_dependency.dstAccessMask        = 0;
+        lighting_pass_dependency.srcStageMask         = RHI_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | RHI_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        lighting_pass_dependency.dstStageMask         = RHI_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        lighting_pass_dependency.srcAccessMask        = RHI_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // STORE_OP_STORE
+        lighting_pass_dependency.dstAccessMask        = RHI_ACCESS_SHADER_READ_BIT;
         lighting_pass_dependency.dependencyFlags      = 0; // NOT BY REGION
 
         RHIRenderPassCreateInfo renderpass_create_info {};
         renderpass_create_info.sType           = RHI_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderpass_create_info.attachmentCount = (sizeof(attachments) / sizeof(attachments[0]));
-        renderpass_create_info.pAttachments    = attachments;
+        renderpass_create_info.attachmentCount = 1;
+        renderpass_create_info.pAttachments    = &directional_light_shadow_depth_attachment_description;
         renderpass_create_info.subpassCount    = (sizeof(subpasses) / sizeof(subpasses[0]));
         renderpass_create_info.pSubpasses      = subpasses;
         renderpass_create_info.dependencyCount = (sizeof(dependencies) / sizeof(dependencies[0]));
@@ -153,7 +111,7 @@ namespace Piccolo
     }
     void DirectionalLightShadowPass::setupFramebuffer()
     {
-        RHIImageView* attachments[2] = {m_framebuffer.attachments[0].view, m_framebuffer.attachments[1].view};
+        RHIImageView* attachments[1] = {m_framebuffer.attachments[0].view};
 
         RHIFramebufferCreateInfo framebuffer_create_info {};
         framebuffer_create_info.sType           = RHI_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -207,7 +165,7 @@ namespace Piccolo
 
         RHIDescriptorSetLayoutCreateInfo mesh_point_light_shadow_global_layout_create_info;
         mesh_point_light_shadow_global_layout_create_info.sType = RHI_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        mesh_point_light_shadow_global_layout_create_info.pNext = NULL;
+        mesh_point_light_shadow_global_layout_create_info.pNext = nullptr;
         mesh_point_light_shadow_global_layout_create_info.flags = 0;
         mesh_point_light_shadow_global_layout_create_info.bindingCount =
             (sizeof(mesh_directional_light_shadow_global_layout_bindings) /
@@ -252,8 +210,7 @@ namespace Piccolo
         frag_pipeline_shader_stage_create_info.module = frag_shader_module;
         frag_pipeline_shader_stage_create_info.pName  = "main";
 
-        RHIPipelineShaderStageCreateInfo shader_stages[] = {vert_pipeline_shader_stage_create_info,
-                                                           frag_pipeline_shader_stage_create_info};
+        RHIPipelineShaderStageCreateInfo shader_stages[] = {vert_pipeline_shader_stage_create_info};
 
         auto                                 vertex_binding_descriptions   = MeshVertex::getBindingDescriptions();
         auto                                 vertex_attribute_descriptions = MeshVertex::getAttributeDescriptions();
@@ -314,8 +271,8 @@ namespace Piccolo
         color_blend_state_create_info.sType             = RHI_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         color_blend_state_create_info.logicOpEnable     = RHI_FALSE;
         color_blend_state_create_info.logicOp           = RHI_LOGIC_OP_COPY;
-        color_blend_state_create_info.attachmentCount   = 1;
-        color_blend_state_create_info.pAttachments      = &color_blend_attachment_state;
+        color_blend_state_create_info.attachmentCount   = 0;
+        color_blend_state_create_info.pAttachments      = nullptr;
         color_blend_state_create_info.blendConstants[0] = 0.0f;
         color_blend_state_create_info.blendConstants[1] = 0.0f;
         color_blend_state_create_info.blendConstants[2] = 0.0f;
@@ -332,26 +289,26 @@ namespace Piccolo
         RHIPipelineDynamicStateCreateInfo dynamic_state_create_info {};
         dynamic_state_create_info.sType             = RHI_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamic_state_create_info.dynamicStateCount = 0;
-        dynamic_state_create_info.pDynamicStates    = NULL;
+        dynamic_state_create_info.pDynamicStates    = nullptr;
 
-        RHIGraphicsPipelineCreateInfo pipelineInfo {};
-        pipelineInfo.sType               = RHI_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount          = (sizeof(shader_stages) / sizeof(shader_stages[0]));
-        pipelineInfo.pStages             = shader_stages;
-        pipelineInfo.pVertexInputState   = &vertex_input_state_create_info;
-        pipelineInfo.pInputAssemblyState = &input_assembly_create_info;
-        pipelineInfo.pViewportState      = &viewport_state_create_info;
-        pipelineInfo.pRasterizationState = &rasterization_state_create_info;
-        pipelineInfo.pMultisampleState   = &multisample_state_create_info;
-        pipelineInfo.pColorBlendState    = &color_blend_state_create_info;
-        pipelineInfo.pDepthStencilState  = &depth_stencil_create_info;
-        pipelineInfo.layout              = m_render_pipelines[0].layout;
-        pipelineInfo.renderPass          = m_framebuffer.render_pass;
-        pipelineInfo.subpass             = 0;
-        pipelineInfo.basePipelineHandle  = RHI_NULL_HANDLE;
-        pipelineInfo.pDynamicState       = &dynamic_state_create_info;
+        RHIGraphicsPipelineCreateInfo pipeline_info {};
+        pipeline_info.sType               = RHI_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipeline_info.stageCount          = (sizeof(shader_stages) / sizeof(shader_stages[0]));
+        pipeline_info.pStages             = shader_stages;
+        pipeline_info.pVertexInputState   = &vertex_input_state_create_info;
+        pipeline_info.pInputAssemblyState = &input_assembly_create_info;
+        pipeline_info.pViewportState      = &viewport_state_create_info;
+        pipeline_info.pRasterizationState = &rasterization_state_create_info;
+        pipeline_info.pMultisampleState   = &multisample_state_create_info;
+        pipeline_info.pColorBlendState    = &color_blend_state_create_info;
+        pipeline_info.pDepthStencilState  = &depth_stencil_create_info;
+        pipeline_info.layout              = m_render_pipelines[0].layout;
+        pipeline_info.renderPass          = m_framebuffer.render_pass;
+        pipeline_info.subpass             = 0;
+        pipeline_info.basePipelineHandle  = RHI_NULL_HANDLE;
+        pipeline_info.pDynamicState       = &dynamic_state_create_info;
 
-        if (RHI_SUCCESS != m_rhi->createGraphicsPipelines(RHI_NULL_HANDLE, 1, &pipelineInfo, m_render_pipelines[0].pipeline))
+        if (RHI_SUCCESS != m_rhi->createGraphicsPipelines(RHI_NULL_HANDLE, 1, &pipeline_info, m_render_pipelines[0].pipeline))
         {
             throw std::runtime_error("create mesh directional light shadow graphics pipeline");
         }
@@ -363,7 +320,7 @@ namespace Piccolo
         RHIDescriptorSetAllocateInfo mesh_directional_light_shadow_global_descriptor_set_alloc_info;
         mesh_directional_light_shadow_global_descriptor_set_alloc_info.sType =
             RHI_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        mesh_directional_light_shadow_global_descriptor_set_alloc_info.pNext          = NULL;
+        mesh_directional_light_shadow_global_descriptor_set_alloc_info.pNext          = nullptr;
         mesh_directional_light_shadow_global_descriptor_set_alloc_info.descriptorPool = m_rhi->getDescriptorPoor();
         mesh_directional_light_shadow_global_descriptor_set_alloc_info.descriptorSetCount = 1;
         mesh_directional_light_shadow_global_descriptor_set_alloc_info.pSetLayouts = &m_descriptor_infos[0].layout;
@@ -408,7 +365,7 @@ namespace Piccolo
 
         RHIWriteDescriptorSet& mesh_directional_light_shadow_perframe_storage_buffer_write_info = descriptor_writes[0];
         mesh_directional_light_shadow_perframe_storage_buffer_write_info.sType = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        mesh_directional_light_shadow_perframe_storage_buffer_write_info.pNext = NULL;
+        mesh_directional_light_shadow_perframe_storage_buffer_write_info.pNext = nullptr;
         mesh_directional_light_shadow_perframe_storage_buffer_write_info.dstSet          = descriptor_set_to_write;
         mesh_directional_light_shadow_perframe_storage_buffer_write_info.dstBinding      = 0;
         mesh_directional_light_shadow_perframe_storage_buffer_write_info.dstArrayElement = 0;
@@ -422,7 +379,7 @@ namespace Piccolo
             descriptor_writes[1];
         mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.sType =
             RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.pNext           = NULL;
+        mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.pNext           = nullptr;
         mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.dstSet          = descriptor_set_to_write;
         mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.dstBinding      = 1;
         mesh_directional_light_shadow_perdrawcall_storage_buffer_write_info.dstArrayElement = 0;
@@ -436,7 +393,7 @@ namespace Piccolo
             descriptor_writes[2];
         mesh_directional_light_shadow_per_drawcall_vertex_blending_storage_buffer_write_info.sType =
             RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        mesh_directional_light_shadow_per_drawcall_vertex_blending_storage_buffer_write_info.pNext = NULL;
+        mesh_directional_light_shadow_per_drawcall_vertex_blending_storage_buffer_write_info.pNext = nullptr;
         mesh_directional_light_shadow_per_drawcall_vertex_blending_storage_buffer_write_info.dstSet =
             descriptor_set_to_write;
         mesh_directional_light_shadow_per_drawcall_vertex_blending_storage_buffer_write_info.dstBinding      = 2;
@@ -450,7 +407,7 @@ namespace Piccolo
         m_rhi->updateDescriptorSets((sizeof(descriptor_writes) / sizeof(descriptor_writes[0])),
                                     descriptor_writes,
                                     0,
-                                    NULL);
+                                    nullptr);
     }
     void DirectionalLightShadowPass::drawModel()
     {
@@ -550,7 +507,7 @@ namespace Piccolo
                                                         1,
                                                         &mesh->mesh_vertex_blending_descriptor_set,
                                                         0,
-                                                        NULL);
+                                                        nullptr);
 
                         RHIBuffer*     vertex_buffers[] = {mesh->mesh_vertex_position_buffer};
                         RHIDeviceSize offsets[]        = {0};
