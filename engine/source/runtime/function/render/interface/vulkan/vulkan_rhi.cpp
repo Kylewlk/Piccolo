@@ -1525,13 +1525,13 @@ namespace Piccolo
             const auto& rhi_desc = pCreateInfo->pSubpasses[i];
             totalAttachmentRefenrence += rhi_desc.inputAttachmentCount; // pInputAttachments
             totalAttachmentRefenrence += rhi_desc.colorAttachmentCount; // pColorAttachments
-            if (rhi_desc.pDepthStencilAttachment != nullptr)
-            {
-                totalAttachmentRefenrence += rhi_desc.colorAttachmentCount; // pDepthStencilAttachment
-            }
             if (rhi_desc.pResolveAttachments != nullptr)
             {
                 totalAttachmentRefenrence += rhi_desc.colorAttachmentCount; // pResolveAttachments
+            }
+            if (rhi_desc.pDepthStencilAttachment != nullptr)
+            {
+                totalAttachmentRefenrence += 1; // pDepthStencilAttachment
             }
         }
         std::vector<VkSubpassDescription> vk_subpass_description(pCreateInfo->subpassCount);
@@ -1591,16 +1591,14 @@ namespace Piccolo
             if (rhi_desc.pDepthStencilAttachment != nullptr)
             {
                 vk_desc.pDepthStencilAttachment = &vk_attachment_reference[currentAttachmentRefence];
-                for (int i = 0; i < (rhi_desc).colorAttachmentCount; ++i)
-                {
-                    const auto& rhi_attachment_refence_depth = (rhi_desc).pDepthStencilAttachment[i];
-                    auto& vk_attachment_refence_depth = vk_attachment_reference[currentAttachmentRefence];
 
-                    vk_attachment_refence_depth.attachment = rhi_attachment_refence_depth.attachment;
-                    vk_attachment_refence_depth.layout = (VkImageLayout)(rhi_attachment_refence_depth.layout);
+                const auto& rhi_attachment_refence_depth = (rhi_desc).pDepthStencilAttachment[0];
+                auto& vk_attachment_refence_depth = vk_attachment_reference[currentAttachmentRefence];
 
-                    currentAttachmentRefence += 1;
-                };
+                vk_attachment_refence_depth.attachment = rhi_attachment_refence_depth.attachment;
+                vk_attachment_refence_depth.layout = (VkImageLayout)(rhi_attachment_refence_depth.layout);
+
+                currentAttachmentRefence += 1;
             };
         };
         if (currentAttachmentRefence != totalAttachmentRefenrence)
