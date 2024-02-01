@@ -5,6 +5,7 @@
 #include "runtime/function/render/interface/rhi.h"
 
 #include "runtime/function/render/render_common.h"
+#include "render_helper.h"
 
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
@@ -99,6 +100,21 @@ namespace Piccolo
         IBLResource          _ibl_resource;
         ColorGradingResource _color_grading_resource;
         StorageBuffer        _storage_buffer;
+
+        template<class T>
+        T* getStorageBuffer(RHI* rhi, uint32_t& offset)
+        {
+            offset = roundUp(_storage_buffer._global_upload_ringbuffers_end[rhi->getCurrentFrameIndex()],
+                             _storage_buffer._min_storage_buffer_offset_alignment);
+
+            _storage_buffer._global_upload_ringbuffers_end[rhi->getCurrentFrameIndex()] = offset + sizeof(T);
+            assert(_storage_buffer._global_upload_ringbuffers_end[rhi->getCurrentFrameIndex()] <=
+                   (_storage_buffer._global_upload_ringbuffers_begin[rhi->getCurrentFrameIndex()] +
+                    _storage_buffer._global_upload_ringbuffers_size[rhi->getCurrentFrameIndex()]));
+
+            return reinterpret_cast<T*>(
+                reinterpret_cast<uintptr_t>(_storage_buffer._global_upload_ringbuffer_memory_pointer) + offset);
+        }
     };
 
     class RenderResource : public RenderResourceBase

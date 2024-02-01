@@ -2175,24 +2175,9 @@ namespace Piccolo
         m_rhi->cmdSetScissorPFN(m_rhi->getCurrentCommandBuffer(), 0, 1, m_rhi->getSwapchainInfo().scissor);
 
         // perframe storage buffer
-        uint32_t perframe_dynamic_offset =
-            roundUp(m_global_render_resource->_storage_buffer
-                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-
-        m_global_render_resource->_storage_buffer._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-            perframe_dynamic_offset + sizeof(MeshPerframeStorageBufferObject);
-        assert(m_global_render_resource->_storage_buffer
-                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-               (m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-        (*reinterpret_cast<MeshPerframeStorageBufferObject*>(
-            reinterpret_cast<uintptr_t>(
-                m_global_render_resource->_storage_buffer._global_upload_ringbuffer_memory_pointer) +
-            perframe_dynamic_offset)) = m_mesh_perframe_storage_buffer_object;
+        uint32_t perframe_dynamic_offset = 0;
+        *m_global_render_resource->getStorageBuffer<MeshPerframeStorageBufferObject>(
+            m_rhi.get(), perframe_dynamic_offset) = m_mesh_perframe_storage_buffer_object;
 
         for (auto& pair1 : main_camera_mesh_drawcall_batch)
         {
@@ -2256,25 +2241,11 @@ namespace Piccolo
                                 drawcall_max_instance_count;
 
                         // per drawcall storage buffer
-                        uint32_t perdrawcall_dynamic_offset =
-                            roundUp(m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-                        m_global_render_resource->_storage_buffer
-                            ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-                            perdrawcall_dynamic_offset + sizeof(MeshPerdrawcallStorageBufferObject);
-                        assert(m_global_render_resource->_storage_buffer
-                                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-                               (m_global_render_resource->_storage_buffer
-                                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                                m_global_render_resource->_storage_buffer
-                                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
+                        uint32_t perdrawcall_dynamic_offset{};
+                        auto&    perdrawcall_storage_buffer_object =
+                            *m_global_render_resource->getStorageBuffer<MeshPerdrawcallStorageBufferObject>(
+                                m_rhi.get(), perdrawcall_dynamic_offset);
 
-                        MeshPerdrawcallStorageBufferObject& perdrawcall_storage_buffer_object =
-                            (*reinterpret_cast<MeshPerdrawcallStorageBufferObject*>(
-                                reinterpret_cast<uintptr_t>(m_global_render_resource->_storage_buffer
-                                                                ._global_upload_ringbuffer_memory_pointer) +
-                                perdrawcall_dynamic_offset));
                         for (uint32_t i = 0; i < current_instance_count; ++i)
                         {
                             perdrawcall_storage_buffer_object.mesh_instances[i].model_matrix =
@@ -2297,27 +2268,9 @@ namespace Piccolo
                         }
                         if (least_one_enable_vertex_blending)
                         {
-                            per_drawcall_vertex_blending_dynamic_offset =
-                                roundUp(m_global_render_resource->_storage_buffer
-                                            ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                                        m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-                            m_global_render_resource->_storage_buffer
-                                ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-                                per_drawcall_vertex_blending_dynamic_offset +
-                                sizeof(MeshPerdrawcallVertexBlendingStorageBufferObject);
-                            assert(m_global_render_resource->_storage_buffer
-                                       ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-                                   (m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                                    m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-                            MeshPerdrawcallVertexBlendingStorageBufferObject&
-                                per_drawcall_vertex_blending_storage_buffer_object =
-                                    (*reinterpret_cast<MeshPerdrawcallVertexBlendingStorageBufferObject*>(
-                                        reinterpret_cast<uintptr_t>(m_global_render_resource->_storage_buffer
-                                                                        ._global_upload_ringbuffer_memory_pointer) +
-                                        per_drawcall_vertex_blending_dynamic_offset));
+                            auto& per_drawcall_vertex_blending_storage_buffer_object =
+                                *m_global_render_resource->getStorageBuffer<MeshPerdrawcallVertexBlendingStorageBufferObject>(
+                                         m_rhi.get(), per_drawcall_vertex_blending_dynamic_offset);
                             for (uint32_t i = 0; i < current_instance_count; ++i)
                             {
                                 if (mesh_nodes[drawcall_max_instance_count * drawcall_index + i].joint_matrices)
@@ -2375,24 +2328,9 @@ namespace Piccolo
         m_rhi->cmdSetViewportPFN(m_rhi->getCurrentCommandBuffer(), 0, 1, m_rhi->getSwapchainInfo().viewport);
         m_rhi->cmdSetScissorPFN(m_rhi->getCurrentCommandBuffer(), 0, 1, m_rhi->getSwapchainInfo().scissor);
 
-        uint32_t perframe_dynamic_offset =
-            roundUp(m_global_render_resource->_storage_buffer
-                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-
-        m_global_render_resource->_storage_buffer._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-            perframe_dynamic_offset + sizeof(MeshPerframeStorageBufferObject);
-        assert(m_global_render_resource->_storage_buffer
-                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-               (m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-        (*reinterpret_cast<MeshPerframeStorageBufferObject*>(
-            reinterpret_cast<uintptr_t>(
-                m_global_render_resource->_storage_buffer._global_upload_ringbuffer_memory_pointer) +
-            perframe_dynamic_offset)) = m_mesh_perframe_storage_buffer_object;
+        uint32_t perframe_dynamic_offset{};
+        *m_global_render_resource->getStorageBuffer<MeshPerframeStorageBufferObject>(
+            m_rhi.get(), perframe_dynamic_offset) = m_mesh_perframe_storage_buffer_object;
 
         RHIDescriptorSet* descriptor_sets[3] = {m_descriptor_infos[_mesh_global].descriptor_set,
                                               m_descriptor_infos[_deferred_lighting].descriptor_set,
@@ -2448,24 +2386,9 @@ namespace Piccolo
         m_rhi->cmdSetScissorPFN(m_rhi->getCurrentCommandBuffer(), 0, 1, m_rhi->getSwapchainInfo().scissor);
 
         // perframe storage buffer
-        uint32_t perframe_dynamic_offset =
-            roundUp(m_global_render_resource->_storage_buffer
-                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-
-        m_global_render_resource->_storage_buffer._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-            perframe_dynamic_offset + sizeof(MeshPerframeStorageBufferObject);
-        assert(m_global_render_resource->_storage_buffer
-                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-               (m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-        (*reinterpret_cast<MeshPerframeStorageBufferObject*>(
-            reinterpret_cast<uintptr_t>(
-                m_global_render_resource->_storage_buffer._global_upload_ringbuffer_memory_pointer) +
-            perframe_dynamic_offset)) = m_mesh_perframe_storage_buffer_object;
+        uint32_t perframe_dynamic_offset{};
+        *m_global_render_resource->getStorageBuffer<MeshPerframeStorageBufferObject>(
+            m_rhi.get(), perframe_dynamic_offset) = m_mesh_perframe_storage_buffer_object;
 
         for (auto& pair1 : main_camera_mesh_drawcall_batch)
         {
@@ -2528,25 +2451,10 @@ namespace Piccolo
                                 drawcall_max_instance_count;
 
                         // per drawcall storage buffer
-                        uint32_t perdrawcall_dynamic_offset =
-                            roundUp(m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-                        m_global_render_resource->_storage_buffer
-                            ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-                            perdrawcall_dynamic_offset + sizeof(MeshPerdrawcallStorageBufferObject);
-                        assert(m_global_render_resource->_storage_buffer
-                                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-                               (m_global_render_resource->_storage_buffer
-                                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                                m_global_render_resource->_storage_buffer
-                                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
+                        uint32_t perdrawcall_dynamic_offset{};
+                        auto&    perdrawcall_storage_buffer_object = *m_global_render_resource->getStorageBuffer<MeshPerdrawcallStorageBufferObject>(
+                                m_rhi.get(), perdrawcall_dynamic_offset);
 
-                        MeshPerdrawcallStorageBufferObject& perdrawcall_storage_buffer_object =
-                            (*reinterpret_cast<MeshPerdrawcallStorageBufferObject*>(
-                                reinterpret_cast<uintptr_t>(m_global_render_resource->_storage_buffer
-                                                                ._global_upload_ringbuffer_memory_pointer) +
-                                perdrawcall_dynamic_offset));
                         for (uint32_t i = 0; i < current_instance_count; ++i)
                         {
                             perdrawcall_storage_buffer_object.mesh_instances[i].model_matrix =
@@ -2569,27 +2477,9 @@ namespace Piccolo
                         }
                         if (least_one_enable_vertex_blending)
                         {
-                            per_drawcall_vertex_blending_dynamic_offset =
-                                roundUp(m_global_render_resource->_storage_buffer
-                                            ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                                        m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-                            m_global_render_resource->_storage_buffer
-                                ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-                                per_drawcall_vertex_blending_dynamic_offset +
-                                sizeof(MeshPerdrawcallVertexBlendingStorageBufferObject);
-                            assert(m_global_render_resource->_storage_buffer
-                                       ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-                                   (m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                                    m_global_render_resource->_storage_buffer
-                                        ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-                            MeshPerdrawcallVertexBlendingStorageBufferObject&
-                                per_drawcall_vertex_blending_storage_buffer_object =
-                                    (*reinterpret_cast<MeshPerdrawcallVertexBlendingStorageBufferObject*>(
-                                        reinterpret_cast<uintptr_t>(m_global_render_resource->_storage_buffer
-                                                                        ._global_upload_ringbuffer_memory_pointer) +
-                                        per_drawcall_vertex_blending_dynamic_offset));
+                            auto& per_drawcall_vertex_blending_storage_buffer_object =
+                                *m_global_render_resource->getStorageBuffer<MeshPerdrawcallVertexBlendingStorageBufferObject>(
+                                    m_rhi.get(), per_drawcall_vertex_blending_dynamic_offset);
                             for (uint32_t i = 0; i < current_instance_count; ++i)
                             {
                                 if (mesh_nodes[drawcall_max_instance_count * drawcall_index + i].joint_matrices)
@@ -2640,24 +2530,9 @@ namespace Piccolo
 
     void MainCameraPass::drawSkybox()
     {
-        uint32_t perframe_dynamic_offset =
-            roundUp(m_global_render_resource->_storage_buffer
-                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-
-        m_global_render_resource->_storage_buffer._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-            perframe_dynamic_offset + sizeof(MeshPerframeStorageBufferObject);
-        assert(m_global_render_resource->_storage_buffer
-                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-               (m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-        (*reinterpret_cast<MeshPerframeStorageBufferObject*>(
-            reinterpret_cast<uintptr_t>(
-                m_global_render_resource->_storage_buffer._global_upload_ringbuffer_memory_pointer) +
-            perframe_dynamic_offset)) = m_mesh_perframe_storage_buffer_object;
+        uint32_t perframe_dynamic_offset{};
+        *m_global_render_resource->getStorageBuffer<MeshPerframeStorageBufferObject>(
+            m_rhi.get(), perframe_dynamic_offset) = m_mesh_perframe_storage_buffer_object;
 
         float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_rhi->pushEvent(m_rhi->getCurrentCommandBuffer(), "Skybox", color);
@@ -2683,24 +2558,9 @@ namespace Piccolo
         if (!m_is_show_axis)
             return;
 
-        uint32_t perframe_dynamic_offset =
-            roundUp(m_global_render_resource->_storage_buffer
-                        ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()],
-                    m_global_render_resource->_storage_buffer._min_storage_buffer_offset_alignment);
-
-        m_global_render_resource->_storage_buffer._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] =
-            perframe_dynamic_offset + sizeof(MeshPerframeStorageBufferObject);
-        assert(m_global_render_resource->_storage_buffer
-                   ._global_upload_ringbuffers_end[m_rhi->getCurrentFrameIndex()] <=
-               (m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_begin[m_rhi->getCurrentFrameIndex()] +
-                m_global_render_resource->_storage_buffer
-                    ._global_upload_ringbuffers_size[m_rhi->getCurrentFrameIndex()]));
-
-        (*reinterpret_cast<MeshPerframeStorageBufferObject*>(
-            reinterpret_cast<uintptr_t>(
-                m_global_render_resource->_storage_buffer._global_upload_ringbuffer_memory_pointer) +
-            perframe_dynamic_offset)) = m_mesh_perframe_storage_buffer_object;
+        uint32_t perframe_dynamic_offset{};
+        *m_global_render_resource->getStorageBuffer<MeshPerframeStorageBufferObject>(
+            m_rhi.get(), perframe_dynamic_offset) = m_mesh_perframe_storage_buffer_object;
 
         float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_rhi->pushEvent(m_rhi->getCurrentCommandBuffer(), "Axis", color);
