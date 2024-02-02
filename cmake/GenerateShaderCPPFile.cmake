@@ -10,6 +10,8 @@
 
 function(embed_resource resource_file_name source_file_name variable_name)
 
+#    message(STATUS "embed_resource, resource_file_name=${resource_file_name} source_file_name=${source_file_name} variable_name=${variable_name}")
+
     if(EXISTS "${source_file_name}")
         if("${source_file_name}" IS_NEWER_THAN "${resource_file_name}")
             return()
