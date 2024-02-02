@@ -61,5 +61,9 @@ set(CODEGEN_TARGET "PiccoloPreCompile")
 include(source/precompile/precompile.cmake)
 set_target_properties("${CODEGEN_TARGET}" PROPERTIES FOLDER "Engine" )
 
-add_dependencies(PiccoloRuntime "${CODEGEN_TARGET}")
+# 去掉PiccoloPreCompile依赖，这个依赖会导致每次编译前都执行PiccoloParser，生成新的反射头文件，
+# 导致每次运行前都要重新编译链接
+# 去掉这个依赖后第一次执行和有修改反射相关的头文件，需要手动构建 PiccoloPreCompile 目标
+#add_dependencies(PiccoloRuntime "${CODEGEN_TARGET}")
 add_dependencies("${CODEGEN_TARGET}" "PiccoloParser")
+
