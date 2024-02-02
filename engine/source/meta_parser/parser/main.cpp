@@ -20,6 +20,19 @@ int main(int argc, char* argv[])
 
         result = parse(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
 
+        constexpr  const char* arg_names[]{
+            "",
+            "project_input_file_name",
+            "(output)source_include_file_name",
+            "include_path",
+            "sys_include",
+            "module_name",
+            "show_errors"};
+        for (int i = 1; i <= 6; ++i)
+        {
+            std::cout << "parser args[" << i << "]-" << arg_names[i] << ":" << argv[i] << std::endl;
+        }
+
         auto duration_time = std::chrono::system_clock::now() - start_time;
         std::cout << "Completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(duration_time).count()
                   << "ms" << std::endl;
