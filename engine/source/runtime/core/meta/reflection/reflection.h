@@ -76,17 +76,18 @@ namespace Piccolo
         class ArrayAccessor;
         class ReflectionInstance;
     } // namespace Reflection
-    typedef std::function<void(void*, void*)>      SetFuncion;
-    typedef std::function<void*(void*)>            GetFuncion;
-    typedef std::function<const char*()>           GetNameFuncion;
-    typedef std::function<void(int, void*, void*)> SetArrayFunc;
-    typedef std::function<void*(int, void*)>       GetArrayFunc;
-    typedef std::function<int(void*)>              GetSizeFunc;
-    typedef std::function<bool()>                  GetBoolFunc;
-    typedef std::function<void(void*)>             InvokeFunction;
+    using SetFuncion = std::function<void (void *, void *)>;
+    using GetFuncion = std::function<void *(void *)>;
+    using GetNameFuncion = std::function<const char *()>;
+    using SetArrayFunc = std::function<void (int, void *, void *)>;
+    using GetArrayFunc = std::function<void *(int, void *)>;
+    using GetSizeFunc = std::function<int (void *)>;
+    using GetBoolFunc = std::function<bool ()>;
+    using InvokeFunction = std::function<void (void *)>;
 
     using ConstructorWithJson = std::function<void *(const Json &)>;
     using WriteJsonByName = std::function<Json (void *)>;
+    // Unnecessary namespace add before base class name in reflection
     using GetBaseClassReflectionInstanceListFunc = std::function<int (Reflection::ReflectionInstance *&, void *)>;
 
     using FieldFunctionTuple = std::tuple<SetFuncion, GetFuncion, GetNameFuncion, GetNameFuncion, GetNameFuncion, GetBoolFunc>;
