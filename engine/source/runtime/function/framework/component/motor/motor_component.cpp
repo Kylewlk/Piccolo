@@ -38,7 +38,11 @@ namespace Piccolo
         m_target_position = transform_component->getPosition();
     }
 
-    void MotorComponent::getOffStuckDead() { LOG_INFO("Some get off stuck dead logic"); }
+    void MotorComponent::getOffStuckDead()
+    {
+//        LOG_INFO("Some get off stuck dead logic");
+    }
+
     MotorComponent::~MotorComponent()
     {
         if (m_controller_type == ControllerType::physics)
@@ -133,7 +137,7 @@ namespace Piccolo
             if ((unsigned int)GameCommand::jump & command)
             {
                 m_jump_state                  = JumpState::rising;
-                m_vertical_move_speed         = Math::sqrt(m_motor_res.m_jump_height * 2 * gravity);
+                m_vertical_move_speed         = Math::sqrt(m_motor_res.m_jump_height * 2 * gravity) + m_motor_res.m_jump_speed;
                 m_jump_horizontal_speed_ratio = m_move_speed_ratio;
             }
             else
